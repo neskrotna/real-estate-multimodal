@@ -24,38 +24,54 @@ def build_pairs_for_split(
     neg_per_pos: int,
     seed: int,
 ) -> pd.DataFrame:
+    """
+    Listing-level pairs:
+      - Positive: (listing_id images, its own text)
+      - Negative: (listing_id images, random other listing's text)
+    """
     rng = np.random.default_rng(seed)
 
-    split_df = manifest[manifest["listing_id"].astype(str).isin(set(map(str, listing_ids)))].copy()
+    split_ids = set(map(str, listing_ids))
+    split_df = manifest[manifest["listing_id"].astype(str).isin(split_ids)].copy()
     split_df["listing_id"] = split_df["listing_id"].astype(str)
 
-    text_by_listing = split_df.groupby("listing_id")["text"].first().to_dict()
+    if "image_paths" not in split_df.columns:
+        raise ValueError("Manifest must contain 'image_paths' (list of images per listing).")
+
+    # Ensure list type
+    split_df["image_paths"] = split_df["image_paths"].apply(
+        lambda x: list(x) if isinstance(x, (list, tuple)) else x
+    )
+
+    text_by_listing = split_df.set_index("listing_id")["text"].to_dict()
     unique_listings = sorted(text_by_listing.keys())
     if len(unique_listings) < 2:
         raise RuntimeError("Need at least 2 listings in a split to create negatives.")
 
     rows = []
-    for _, r in tqdm(split_df.iterrows(), total=len(split_df), desc="Building pairs"):
+    for _, r in tqdm(split_df.iterrows(), total=len(split_df), desc="Building listing-level pairs"):
         lid = r["listing_id"]
-        img = r["image_path"]
+        image_paths = r["image_paths"]
         pos_text = text_by_listing[lid]
 
+        # Positive
         rows.append({
             "listing_id": lid,
-            "image_path": img,
+            "image_paths": image_paths,
             "text": pos_text,
             "label": 1,
             "neg_type": None,
             "neg_listing_id": None,
         })
 
+        # Negatives
         for _ in range(neg_per_pos):
             neg_lid = lid
             while neg_lid == lid:
                 neg_lid = unique_listings[int(rng.integers(0, len(unique_listings)))]
             rows.append({
-                "listing_id": lid,          # true listing of the image
-                "image_path": img,
+                "listing_id": lid,          # true listing of the images
+                "image_paths": image_paths,
                 "text": text_by_listing[neg_lid],
                 "label": 0,
                 "neg_type": "random",

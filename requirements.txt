@@ -1,3 +1,4 @@
+# Core
 pandas>=2.2.0
 pyarrow>=16.0.0
 numpy>=1.26.0
@@ -5,7 +6,13 @@ scikit-learn>=1.4.0
 matplotlib>=3.8.0
 tqdm>=4.66.0
 pyyaml>=6.0.1
+
+# Excel (listings.xlsx)
+openpyxl>=3.1.2
+
+# Images (Pillow + HEIC/HEIF support)
 Pillow>=10.2.0
+pillow-heif>=0.16.0
 
 # Torch + vision
 torch>=2.2.0
@@ -24,3 +31,4 @@ faiss-cpu>=1.8.0
 
 # Experiment tracking
 wandb>=0.17.0
+protobuf>=4.25.0

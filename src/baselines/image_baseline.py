@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import numpy as np
 from PIL import Image
@@ -22,30 +22,75 @@ def load_splits(path: str) -> Dict[str, List[str]]:
 
 
 @torch.no_grad()
-def embed_images(paths: List[str], model, transform, device, batch_size: int) -> np.ndarray:
+def embed_listings_mean_pool(
+    listings: List[Tuple[str, List[str]]],
+    model,
+    transform,
+    device,
+    batch_size: int,
+) -> Tuple[List[str], np.ndarray]:
+    """
+    Compute one embedding per listing by:
+      - embedding all images
+      - mean pooling image embeddings for that listing
+
+    Args:
+        listings: list of (listing_id, [image_path1, image_path2, ...])
+    Returns:
+        listing_ids: list[str]
+        embeddings: np.ndarray [n_listings, dim]
+    """
     model.eval()
-    embs = []
-    for i in tqdm(range(0, len(paths), batch_size), desc="Embedding images"):
-        batch_paths = paths[i:i+batch_size]
+
+    # Flatten all images into a single list with listing index
+    flat: List[Tuple[int, str]] = []
+    listing_ids: List[str] = []
+    for idx, (lid, paths) in enumerate(listings):
+        listing_ids.append(lid)
+        for p in paths:
+            flat.append((idx, p))
+
+    if len(flat) == 0:
+        raise RuntimeError("No images found to embed.")
+
+    sums = None  # initialized after first forward pass to know embedding dim
+    counts = np.zeros(len(listings), dtype=np.int64)
+
+    for i in tqdm(range(0, len(flat), batch_size), desc="Embedding images (mean-pooling per listing)"):
+        batch = flat[i : i + batch_size]
+
         imgs = []
-        for p in batch_paths:
-            img = Image.open(p).convert("RGB")
-            imgs.append(transform(img))
-        x = torch.stack(imgs).to(device)
-        y = model(x).cpu().numpy()
-        embs.append(y)
-    return np.vstack(embs)
+        idxs = []
 
+        for li, p in batch:
+            try:
+                img = Image.open(p).convert("RGB")
+                imgs.append(transform(img))
+                idxs.append(li)
+            except Exception:
+                # Don't crash the run because of 1 broken file
+                continue
 
-def unique_listing_rank(ranked_listing_ids: List[str]) -> List[str]:
-    seen = set()
-    out = []
-    for lid in ranked_listing_ids:
-        if lid in seen:
+        if len(imgs) == 0:
             continue
-        seen.add(lid)
-        out.append(lid)
-    return out
+
+        x = torch.stack(imgs).to(device)
+        y = model(x).detach().cpu().numpy()  # [b, dim]
+
+        if sums is None:
+            sums = np.zeros((len(listings), y.shape[1]), dtype=np.float32)
+
+        for row_idx, li in enumerate(idxs):
+            sums[li] += y[row_idx]
+            counts[li] += 1
+
+    if sums is None:
+        raise RuntimeError("Failed to embed any images. Check image paths and formats.")
+
+    pooled = sums / (counts[:, None] + 1e-9)
+    pooled = pooled / (np.linalg.norm(pooled, axis=1, keepdims=True) + 1e-9)
+
+    return listing_ids, pooled
 
 
 def main() -> None:
@@ -59,7 +104,19 @@ def main() -> None:
     args = parser.parse_args()
 
     df = read_table(args.manifest)
+
+    if "listing_id" not in df.columns:
+        raise ValueError("Manifest must contain 'listing_id'.")
+
+    if "image_paths" not in df.columns:
+        raise ValueError("Manifest must contain 'image_paths' (list of images per listing).")
+
     df["listing_id"] = df["listing_id"].astype(str)
+
+    # Ensure list type (parquet usually restores list-columns fine, but let's be safe)
+    df["image_paths"] = df["image_paths"].apply(
+        lambda x: list(x) if isinstance(x, (list, tuple)) else x
+    )
 
     splits = load_splits(args.splits)
     train_ids = set(map(str, splits["train"]))
@@ -68,54 +125,48 @@ def main() -> None:
     train_df = df[df["listing_id"].isin(train_ids)].copy()
     test_df = df[df["listing_id"].isin(test_ids)].copy()
 
-    # Query: first image per test listing
-    test_queries = (
-        test_df.sort_values(["listing_id", "image_index"])
-        .groupby("listing_id")
-        .first()
-        .reset_index()
-    )
-
-    train_images = train_df["image_path"].tolist()
-    train_image_listing_ids = train_df["listing_id"].tolist()
+    train_listings = list(zip(train_df["listing_id"].tolist(), train_df["image_paths"].tolist()))
+    test_listings = list(zip(test_df["listing_id"].tolist(), test_df["image_paths"].tolist()))
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     backbone = timm.create_model(args.model, pretrained=True, num_classes=0)
     backbone = backbone.to(device)
 
-    transform = T.Compose([
-        T.Resize((224, 224)),
-        T.ToTensor(),
-        T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-    ])
+    transform = T.Compose(
+        [
+            T.Resize((224, 224)),
+            T.ToTensor(),
+            T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ]
+    )
 
-    train_emb = embed_images(train_images, backbone, transform, device, batch_size=args.batch_size)
-    train_emb = train_emb / (np.linalg.norm(train_emb, axis=1, keepdims=True) + 1e-9)
+    train_listing_ids, train_emb = embed_listings_mean_pool(
+        train_listings, backbone, transform, device, batch_size=args.batch_size
+    )
+    test_listing_ids, test_emb = embed_listings_mean_pool(
+        test_listings, backbone, transform, device, batch_size=args.batch_size
+    )
 
-    test_paths = test_queries["image_path"].tolist()
-    test_emb = embed_images(test_paths, backbone, transform, device, batch_size=args.batch_size)
-    test_emb = test_emb / (np.linalg.norm(test_emb, axis=1, keepdims=True) + 1e-9)
-
-    sim = test_emb @ train_emb.T
+    sim = test_emb @ train_emb.T  # [n_test, n_train]
 
     results = []
-    for i, true_id in enumerate(test_queries["listing_id"].tolist()):
+    for i, true_id in enumerate(test_listing_ids):
         ranked_idx = np.argsort(-sim[i])
-        ranked_img_listing_ids = [train_image_listing_ids[j] for j in ranked_idx]
-        ranked_listing_ids = unique_listing_rank(ranked_img_listing_ids)
+        ranked_listing_ids = [train_listing_ids[j] for j in ranked_idx]
         results.append((true_id, ranked_listing_ids))
 
     summary = summarize_retrieval(results, ks=args.k)
 
     out = {
-        "baseline": f"image_retrieval_{args.model}",
-        "split": "test_query_images_vs_train_images",
+        "baseline": f"image_retrieval_listing_meanpool_{args.model}",
+        "split": "test_listings_vs_train_listings",
         "k": args.k,
         "metrics": summary,
-        "n_train_images": len(train_images),
-        "n_test_queries": len(test_queries),
+        "n_train_listings": len(train_listing_ids),
+        "n_test_listings": len(test_listing_ids),
         "device": str(device),
+        "pooling": "mean_over_all_images",
     }
 
     write_json(args.out, out)
