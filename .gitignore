@@ -1,0 +1,29 @@
+# -------------------
+# DATA (IGNORE)
+# -------------------
+data/raw/images/
+data/raw/listings/
+data/raw/annotation_tool/images/
+
+# Annotation outputs (optional)
+data/annotation_tool/annotations/*.json
+
+# -------------------
+# PYTHON
+# -------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# virtual environments
+.venv/
+venv/
+
+# -------------------
+# OS / IDE
+# -------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
