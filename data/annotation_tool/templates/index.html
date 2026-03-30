@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Annotation Tool</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<script>
+    const TOTAL_IMAGES = {{ total }};
+</script>
+
+<div class="container">
+
+    <div class="image-container">
+        <img id="image" src="">
+        <div id="image-info"></div>
+    </div>
+
+    <div class="controls">
+
+        <h3>Scene</h3>
+        <button id="scene-interior" onclick="setScene('interior')">Interior (I)</button>
+        <button id="scene-exterior" onclick="setScene('exterior')">Exterior (E)</button>
+
+        <h3>Room</h3>
+        <button id="room-living_room" onclick="setRoom('living_room')">1 Living</button>
+        <button id="room-bedroom" onclick="setRoom('bedroom')">2 Bedroom</button>
+        <button id="room-kitchen" onclick="setRoom('kitchen')">3 Kitchen</button>
+        <button id="room-bathroom" onclick="setRoom('bathroom')">4 Bathroom</button>
+        <button id="room-balcony" onclick="setRoom('balcony')">5 Balcony</button>
+        <button id="room-room" onclick="setRoom('room')">6 Other</button>
+
+        <h3>Furnishing</h3>
+        <button id="furn-furnished" onclick="setFurnishing('furnished')">Furnished (F)</button>
+        <button id="furn-unfurnished" onclick="setFurnishing('unfurnished')">Unfurnished (U)</button>
+
+        <h3>Attributes</h3>
+        <label><input type="checkbox" value="bright" onchange="toggleAttr(this)"> Bright</label><br>
+        <label><input type="checkbox" value="modern" onchange="toggleAttr(this)"> Modern</label><br>
+        <label><input type="checkbox" value="renovated" onchange="toggleAttr(this)"> Renovated</label><br>
+        <label><input type="checkbox" value="empty" onchange="toggleAttr(this)"> Empty</label><br>
+
+        <h3>Other</h3>
+        <button onclick="markBad()">Mark as Bad Image (X)</button>
+        <label>
+            <input type="checkbox" id="skipAnnotated"> Skip annotated
+        </label>
+
+        <br><br>
+
+        <button onclick="prev()">← Prev</button>
+        <button onclick="next()">Next →</button>
+
+        <p id="progress"></p>
+
+    </div>
+</div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
