@@ -2,255 +2,298 @@ from __future__ import annotations
 
 import argparse
 import json
-from typing import Dict, List, Tuple
+from pathlib import Path
+from typing import Any
 
 import numpy as np
+import torch
 from PIL import Image
+from sentence_transformers import SentenceTransformer, util
 from tqdm import tqdm
 
-import torch
-from transformers import CLIPModel, CLIPProcessor
-
-from src.utils.io import read_table, write_json
-from src.utils.metrics import summarize_retrieval
+from src.utils.io import read_jsonl, write_json
 
 
-def load_splits(path: str) -> Dict[str, List[str]]:
-    with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Run multilingual CLIP baseline on German text-image pairs."
+    )
+    parser.add_argument(
+        "--val-pairs",
+        type=Path,
+        default=Path("data/processed/pairs_val.jsonl"),
+        help="Path to validation pairs JSONL",
+    )
+    parser.add_argument(
+        "--test-pairs",
+        type=Path,
+        default=Path("data/processed/pairs_test.jsonl"),
+        help="Path to test pairs JSONL",
+    )
+    parser.add_argument(
+        "--text-model",
+        type=str,
+        default="sentence-transformers/clip-ViT-B-32-multilingual-v1",
+        help="Multilingual text model",
+    )
+    parser.add_argument(
+        "--image-model",
+        type=str,
+        default="clip-ViT-B-32",
+        help="Image model aligned to the multilingual text model",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("runs/german_clip_baseline"),
+        help="Directory where results will be saved",
+    )
+    parser.add_argument(
+        "--max-images-per-pair",
+        type=int,
+        default=4,
+        help="Maximum number of images to use per pair",
+    )
+    return parser.parse_args()
 
 
-@torch.no_grad()
-def embed_texts(
-    model: CLIPModel,
-    processor: CLIPProcessor,
-    texts: List[str],
-    device,
-    batch_size: int,
+def load_image(image_path: str) -> Image.Image:
+    return Image.open(image_path).convert("RGB")
+
+
+def encode_text(
+    text: str,
+    text_model: SentenceTransformer,
 ) -> np.ndarray:
-    model.eval()
-    embs = []
-    for i in tqdm(range(0, len(texts), batch_size), desc="Embedding texts"):
-        batch = texts[i : i + batch_size]
-        inputs = processor(text=batch, images=None, return_tensors="pt", padding=True, truncation=True)
-        inputs = {k: v.to(device) for k, v in inputs.items() if k != "pixel_values"}
-        feats = model.get_text_features(**inputs)
-        feats = feats / (feats.norm(dim=1, keepdim=True) + 1e-9)
-        embs.append(feats.cpu().numpy())
-    return np.vstack(embs)
+    emb = text_model.encode(
+        [text],
+        convert_to_numpy=True,
+        normalize_embeddings=True,
+        show_progress_bar=False,
+    )
+    return emb[0]
 
 
-@torch.no_grad()
-def embed_listings_mean_pool(
-    model: CLIPModel,
-    processor: CLIPProcessor,
-    listings: List[Tuple[str, List[str]]],
-    device,
-    batch_size: int,
-) -> Tuple[List[str], np.ndarray]:
-    """
-    One embedding per listing = mean(embeddings of all listing images)
-    """
-    model.eval()
+def encode_images(
+    image_paths: list[str],
+    image_model: SentenceTransformer,
+    max_images_per_pair: int,
+) -> np.ndarray:
+    selected_paths = image_paths[:max_images_per_pair]
 
-    flat: List[Tuple[int, str]] = []
-    listing_ids: List[str] = []
-    for idx, (lid, paths) in enumerate(listings):
-        listing_ids.append(lid)
-        for p in paths:
-            flat.append((idx, p))
+    if len(selected_paths) == 0:
+        raise ValueError("Pair has no image paths.")
 
-    if len(flat) == 0:
-        raise RuntimeError("No images found to embed.")
+    images = [load_image(path) for path in selected_paths]
 
-    sums = None
-    counts = np.zeros(len(listings), dtype=np.int64)
+    embs = image_model.encode(
+        images,
+        convert_to_numpy=True,
+        normalize_embeddings=True,
+        show_progress_bar=False,
+    )
 
-    for i in tqdm(range(0, len(flat), batch_size), desc="Embedding listing images (mean-pool)"):
-        batch = flat[i : i + batch_size]
+    pooled = np.mean(embs, axis=0)
+    norm = np.linalg.norm(pooled)
 
-        images = []
-        idxs = []
+    if norm == 0:
+        return pooled
 
-        for li, p in batch:
-            try:
-                images.append(Image.open(p).convert("RGB"))
-                idxs.append(li)
-            except Exception:
-                # skip unreadable images
-                continue
-
-        if len(images) == 0:
-            continue
-
-        inputs = processor(text=None, images=images, return_tensors="pt")
-        inputs = {k: v.to(device) for k, v in inputs.items()}
-
-        feats = model.get_image_features(**inputs)  # [b, d]
-        feats = feats / (feats.norm(dim=1, keepdim=True) + 1e-9)
-        feats = feats.cpu().numpy()
-
-        if sums is None:
-            sums = np.zeros((len(listings), feats.shape[1]), dtype=np.float32)
-
-        for row_idx, li in enumerate(idxs):
-            sums[li] += feats[row_idx]
-            counts[li] += 1
-
-    if sums is None:
-        raise RuntimeError("Failed to embed any images. Check image paths/formats.")
-
-    pooled = sums / (counts[:, None] + 1e-9)
-    pooled = pooled / (np.linalg.norm(pooled, axis=1, keepdims=True) + 1e-9)
-
-    return listing_ids, pooled
+    return pooled / norm
 
 
-def build_listing_text_table(df) -> Tuple[List[str], List[str]]:
-    listing_text = df.groupby("listing_id")["text"].first().reset_index()
-    return listing_text["listing_id"].tolist(), listing_text["text"].fillna("").tolist()
+def score_pair(
+    pair: dict[str, Any],
+    text_model: SentenceTransformer,
+    image_model: SentenceTransformer,
+    max_images_per_pair: int,
+) -> float:
+    text = pair["text"]
+    image_paths = pair["image_paths"]
+
+    text_emb = encode_text(text=text, text_model=text_model)
+    image_emb = encode_images(
+        image_paths=image_paths,
+        image_model=image_model,
+        max_images_per_pair=max_images_per_pair,
+    )
+
+    similarity = float(np.dot(text_emb, image_emb))
+    return similarity
 
 
-def compute_auc(y_true: np.ndarray, y_score: np.ndarray) -> float:
-    from sklearn.metrics import roc_auc_score
-    return float(roc_auc_score(y_true, y_score))
+def score_pairs(
+    pairs: list[dict[str, Any]],
+    text_model: SentenceTransformer,
+    image_model: SentenceTransformer,
+    max_images_per_pair: int,
+) -> list[dict[str, Any]]:
+    scored_pairs: list[dict[str, Any]] = []
+
+    for pair in tqdm(pairs, desc="Scoring pairs"):
+        similarity = score_pair(
+            pair=pair,
+            text_model=text_model,
+            image_model=image_model,
+            max_images_per_pair=max_images_per_pair,
+        )
+
+        row = dict(pair)
+        row["similarity"] = similarity
+        scored_pairs.append(row)
+
+    return scored_pairs
+
+
+def accuracy_at_threshold(
+    scored_pairs: list[dict[str, Any]],
+    threshold: float,
+) -> float:
+    if not scored_pairs:
+        return 0.0
+
+    correct = 0
+    for row in scored_pairs:
+        pred = 1 if row["similarity"] >= threshold else 0
+        if pred == row["label"]:
+            correct += 1
+
+    return correct / len(scored_pairs)
+
+
+def find_best_threshold(
+    scored_val_pairs: list[dict[str, Any]],
+) -> tuple[float, float]:
+    best_threshold = 0.0
+    best_accuracy = -1.0
+
+    for i in range(-100, 101):
+        threshold = i / 100.0
+        acc = accuracy_at_threshold(scored_val_pairs, threshold)
+
+        if acc > best_accuracy:
+            best_accuracy = acc
+            best_threshold = threshold
+
+    return best_threshold, best_accuracy
+
+
+def compute_metrics(
+    scored_pairs: list[dict[str, Any]],
+    threshold: float,
+) -> dict[str, Any]:
+    total = len(scored_pairs)
+    correct = 0
+
+    tp = 0
+    fp = 0
+    tn = 0
+    fn = 0
+
+    for row in scored_pairs:
+        label = row["label"]
+        pred = 1 if row["similarity"] >= threshold else 0
+
+        if pred == label:
+            correct += 1
+
+        if label == 1 and pred == 1:
+            tp += 1
+        elif label == 0 and pred == 1:
+            fp += 1
+        elif label == 0 and pred == 0:
+            tn += 1
+        elif label == 1 and pred == 0:
+            fn += 1
+
+    accuracy = correct / total if total > 0 else 0.0
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+    f1 = (
+        2 * precision * recall / (precision + recall)
+        if (precision + recall) > 0
+        else 0.0
+    )
+
+    return {
+        "num_pairs": total,
+        "threshold": threshold,
+        "accuracy": accuracy,
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "tp": tp,
+        "fp": fp,
+        "tn": tn,
+        "fn": fn,
+    }
+
+
+def save_scored_jsonl(
+    path: Path,
+    scored_pairs: list[dict[str, Any]],
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    with path.open("w", encoding="utf-8") as f:
+        for row in scored_pairs:
+            f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--manifest", required=True, type=str)
-    parser.add_argument("--splits", required=True, type=str)
-    parser.add_argument("--out", required=True, type=str)
-    parser.add_argument("--clip_model", default="laion/CLIP-ViT-B-32-multilingual-v1", type=str)
-    parser.add_argument("--k", nargs="+", type=int, default=[1, 5, 10])
-    parser.add_argument("--batch_size", type=int, default=32)
-    parser.add_argument("--do_mismatch_auc", action="store_true")
-    args = parser.parse_args()
+    args = parse_args()
 
-    df = read_table(args.manifest)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"[INFO] Using device: {device}")
+    print(f"[INFO] Loading multilingual text model: {args.text_model}")
+    print(f"[INFO] Loading image model: {args.image_model}")
 
-    if "listing_id" not in df.columns:
-        raise ValueError("Manifest must contain 'listing_id'.")
-    if "image_paths" not in df.columns:
-        raise ValueError("Manifest must contain 'image_paths' (list of images per listing).")
+    text_model = SentenceTransformer(args.text_model, device=device)
+    image_model = SentenceTransformer(args.image_model, device=device)
 
-    df["listing_id"] = df["listing_id"].astype(str)
-    df["image_paths"] = df["image_paths"].apply(lambda x: list(x) if isinstance(x, (list, tuple)) else x)
+    val_pairs = read_jsonl(args.val_pairs)
+    test_pairs = read_jsonl(args.test_pairs)
 
-    splits = load_splits(args.splits)
-    train_ids = set(map(str, splits["train"]))
-    test_ids = set(map(str, splits["test"]))
+    print(f"[INFO] Loaded {len(val_pairs)} val pairs")
+    print(f"[INFO] Loaded {len(test_pairs)} test pairs")
 
-    train_df = df[df["listing_id"].isin(train_ids)].copy()
-    test_df = df[df["listing_id"].isin(test_ids)].copy()
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    model = CLIPModel.from_pretrained(args.clip_model).to(device)
-    processor = CLIPProcessor.from_pretrained(args.clip_model)
-
-    # --- Text tables (listing-level) ---
-    train_listing_ids_text, train_texts = build_listing_text_table(train_df)
-    test_listing_ids_text, test_texts = build_listing_text_table(test_df)
-
-    train_text_emb = embed_texts(model, processor, train_texts, device, args.batch_size)
-    test_text_emb = embed_texts(model, processor, test_texts, device, args.batch_size)
-
-    # --- Image embeddings (listing-level mean-pool over ALL images) ---
-    train_listings = list(zip(train_df["listing_id"].tolist(), train_df["image_paths"].tolist()))
-    test_listings = list(zip(test_df["listing_id"].tolist(), test_df["image_paths"].tolist()))
-
-    train_listing_ids_img, train_img_emb = embed_listings_mean_pool(
-        model, processor, train_listings, device, args.batch_size
-    )
-    test_listing_ids_img, test_img_emb = embed_listings_mean_pool(
-        model, processor, test_listings, device, args.batch_size
+    scored_val = score_pairs(
+        pairs=val_pairs,
+        text_model=text_model,
+        image_model=image_model,
+        max_images_per_pair=args.max_images_per_pair,
     )
 
-    # Sanity: the listing IDs for text and image should match the df ordering, but not guaranteed
-    # We'll build mapping indices to align results by true_id sets.
+    best_threshold, best_val_accuracy = find_best_threshold(scored_val)
+    val_metrics = compute_metrics(scored_val, best_threshold)
 
-    # =======================
-    # Text -> Image retrieval
-    # =======================
-    # Query: test texts (listing-level)
-    # Gallery: train listing images (listing-level)
+    print(f"[INFO] Best validation threshold: {best_threshold:.2f}")
+    print(f"[INFO] Validation accuracy: {best_val_accuracy:.4f}")
 
-    sim_t2i = test_text_emb @ train_img_emb.T  # [n_test_listings, n_train_listings]
-    results_t2i = []
-    for i, true_lid in enumerate(test_listing_ids_text):
-        ranked_idx = np.argsort(-sim_t2i[i])
-        ranked_listing_ids = [train_listing_ids_img[j] for j in ranked_idx]
-        results_t2i.append((true_lid, ranked_listing_ids))
-    metrics_t2i = summarize_retrieval(results_t2i, ks=args.k)
+    scored_test = score_pairs(
+        pairs=test_pairs,
+        text_model=text_model,
+        image_model=image_model,
+        max_images_per_pair=args.max_images_per_pair,
+    )
 
-    # =======================
-    # Image -> Text retrieval
-    # =======================
-    # Query: test listing images (listing-level)
-    # Gallery: train texts (listing-level)
+    test_metrics = compute_metrics(scored_test, best_threshold)
 
-    sim_i2t = test_img_emb @ train_text_emb.T  # [n_test_listings, n_train_listings]
-    results_i2t = []
-    for i, true_lid in enumerate(test_listing_ids_img):
-        ranked_idx = np.argsort(-sim_i2t[i])
-        ranked_listing_ids = [train_listing_ids_text[j] for j in ranked_idx]
-        results_i2t.append((true_lid, ranked_listing_ids))
-    metrics_i2t = summarize_retrieval(results_i2t, ks=args.k)
+    args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    out = {
-        "baseline": "multilingual_clip_listing_meanpool",
-        "clip_model": args.clip_model,
-        "device": str(device),
-        "k": args.k,
-        "text_to_image_listing_metrics": metrics_t2i,
-        "image_to_text_listing_metrics": metrics_i2t,
-        "n_train_listings": len(train_listing_ids_text),
-        "n_test_listings": len(test_listing_ids_text),
-        "pooling": "mean_over_all_images",
-    }
+    save_scored_jsonl(args.output_dir / "scored_val.jsonl", scored_val)
+    save_scored_jsonl(args.output_dir / "scored_test.jsonl", scored_test)
 
-    # =======================
-    # Optional mismatch AUC
-    # =======================
-    
-    if args.do_mismatch_auc:
-        # For each test listing: positive score = dot(text_emb, its own listing_img_emb)
-        # Negative = dot(text_emb, random other listing_img_emb)
-        rng = np.random.default_rng(42)
+    write_json(args.output_dir / "val_metrics.json", val_metrics)
+    write_json(args.output_dir / "test_metrics.json", test_metrics)
 
-        # Build mapping listing_id -> index for test image embeddings
-        idx_by_lid_img = {lid: i for i, lid in enumerate(test_listing_ids_img)}
-        idx_by_lid_txt = {lid: i for i, lid in enumerate(test_listing_ids_text)}
+    print("[INFO] Validation metrics:")
+    print(json.dumps(val_metrics, indent=2, ensure_ascii=False))
 
-        common_lids = sorted(set(test_listing_ids_img).intersection(set(test_listing_ids_text)))
-        if len(common_lids) < 2:
-            raise RuntimeError("Need at least 2 overlapping test listings for mismatch AUC.")
+    print("[INFO] Test metrics:")
+    print(json.dumps(test_metrics, indent=2, ensure_ascii=False))
 
-        y_true = []
-        y_score = []
-
-        for lid in common_lids:
-            t = test_text_emb[idx_by_lid_txt[lid]]          # (d,)
-            pos_img = test_img_emb[idx_by_lid_img[lid]]     # (d,)
-            y_true.append(1)
-            y_score.append(float(pos_img @ t))
-
-            neg_lid = lid
-            while neg_lid == lid:
-                neg_lid = common_lids[int(rng.integers(0, len(common_lids)))]
-            neg_img = test_img_emb[idx_by_lid_img[neg_lid]]
-            y_true.append(0)
-            y_score.append(float(neg_img @ t))
-
-        out["mismatch_auc_synthetic"] = compute_auc(np.array(y_true), np.array(y_score))
-
-    write_json(args.out, out)
-    print(f"Wrote report: {args.out}")
-    print("Text→Image:", metrics_t2i)
-    print("Image→Text:", metrics_i2t)
-    if "mismatch_auc_synthetic" in out:
-        print("Mismatch AUC (synthetic):", out["mismatch_auc_synthetic"])
+    print(f"[INFO] Results saved to: {args.output_dir}")
 
 
 if __name__ == "__main__":

@@ -1,46 +1,103 @@
 from __future__ import annotations
 
 import argparse
-import numpy as np
+import random
+from pathlib import Path
 
-from src.utils.io import read_table, write_json
-from src.utils.seed import set_seed
+from src.utils.io import read_jsonl, write_json
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Create train/val/test splits on listing level."
+    )
+    parser.add_argument(
+        "--input",
+        type=Path,
+        default=Path("data/processed/listings.jsonl"),
+        help="Path to listings JSONL",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("data/processed/split_v1.json"),
+        help="Output split JSON file",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for reproducibility",
+    )
+    parser.add_argument(
+        "--train-ratio",
+        type=float,
+        default=0.6,
+        help="Train split ratio",
+    )
+    parser.add_argument(
+        "--val-ratio",
+        type=float,
+        default=0.2,
+        help="Validation split ratio",
+    )
+    parser.add_argument(
+        "--test-ratio",
+        type=float,
+        default=0.2,
+        help="Test split ratio",
+    )
+    return parser.parse_args()
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--manifest", required=True, type=str)
-    parser.add_argument("--output", required=True, type=str)
-    parser.add_argument("--train", default=0.70, type=float)
-    parser.add_argument("--val", default=0.15, type=float)
-    parser.add_argument("--test", default=0.15, type=float)
-    parser.add_argument("--seed", default=42, type=int)
-    args = parser.parse_args()
+    args = parse_args()
 
-    if not np.isclose(args.train + args.val + args.test, 1.0):
-        raise ValueError("train+val+test must sum to 1.0")
+    total_ratio = args.train_ratio + args.val_ratio + args.test_ratio
+    if abs(total_ratio - 1.0) > 1e-8:
+        raise ValueError("train_ratio + val_ratio + test_ratio must sum to 1.0")
 
-    set_seed(args.seed)
+    listings = read_jsonl(args.input)
+    listing_ids = [item["listing_id"] for item in listings]
 
-    df = read_table(args.manifest)
-    listing_ids = df["listing_id"].dropna().astype(str).unique().tolist()
+    random.seed(args.seed)
+    random.shuffle(listing_ids)
 
-    rng = np.random.default_rng(args.seed)
-    rng.shuffle(listing_ids)
+    n_total = len(listing_ids)
+    n_train = int(n_total * args.train_ratio)
+    n_val = int(n_total * args.val_ratio)
+    n_test = n_total - n_train - n_val
 
-    n = len(listing_ids)
-    n_train = int(n * args.train)
-    n_val = int(n * args.val)
+    train_ids = listing_ids[:n_train]
+    val_ids = listing_ids[n_train:n_train + n_val]
+    test_ids = listing_ids[n_train + n_val:]
 
-    splits = {
-        "train": listing_ids[:n_train],
-        "val": listing_ids[n_train:n_train + n_val],
-        "test": listing_ids[n_train + n_val:],
+    split = {
+        "seed": args.seed,
+        "ratios": {
+            "train": args.train_ratio,
+            "val": args.val_ratio,
+            "test": args.test_ratio,
+        },
+        "counts": {
+            "total": n_total,
+            "train": len(train_ids),
+            "val": len(val_ids),
+            "test": len(test_ids),
+        },
+        "train": train_ids,
+        "val": val_ids,
+        "test": test_ids,
     }
 
-    write_json(args.output, splits)
-    print(f"Wrote splits: {args.output}")
-    print(f"Train: {len(splits['train'])} | Val: {len(splits['val'])} | Test: {len(splits['test'])} | Total: {n}")
+    write_json(args.output, split)
+
+    print("=== Split Summary ===")
+    print(f"Total listings: {n_total}")
+    print(f"Train: {len(train_ids)}")
+    print(f"Val:   {len(val_ids)}")
+    print(f"Test:  {len(test_ids)}")
+    print(f"[INFO] Split written to: {args.output}")
 
 
 if __name__ == "__main__":

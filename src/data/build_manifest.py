@@ -2,119 +2,98 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
-import pandas as pd
-from tqdm import tqdm
-
-from src.utils.io import read_table, write_parquet
-from src.utils.image import list_images
-from src.utils.text import normalize_text
+from src.utils.io import read_jsonl, write_jsonl
 
 
-def load_metadata(input_dir: Path) -> pd.DataFrame:
-    """
-    Expects:
-        data/raw/
-            ├── descriptions/listings.xlsx
-            └── images/
-    """
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Build image manifest from listings and image folders."
+    )
+    parser.add_argument(
+        "--listings",
+        type=Path,
+        default=Path("data/processed/listings.jsonl"),
+        help="Path to listings JSONL",
+    )
+    parser.add_argument(
+        "--images-root",
+        type=Path,
+        default=Path("data/processed/images"),
+        help="Root directory of image folders",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=Path("data/processed/manifest.jsonl"),
+        help="Output manifest JSONL",
+    )
+    return parser.parse_args()
 
-    descriptions_dir = input_dir / "descriptions"
 
-    if not descriptions_dir.exists():
-        raise FileNotFoundError(f"{descriptions_dir} not found.")
+def get_image_paths(folder: Path) -> list[str]:
+    if not folder.exists():
+        return []
 
-    # Look for Excel or CSV inside descriptions/
-    candidates = list(descriptions_dir.glob("*.xlsx")) + list(descriptions_dir.glob("*.csv"))
-    if len(candidates) == 0:
-        raise FileNotFoundError("No metadata file (.xlsx or .csv) found in descriptions/")
+    image_files = list(folder.glob("*.jpg"))
 
-    meta_path = candidates[0]  # assume single file
-    print(f"Using metadata file: {meta_path}")
+    # Sort to ensure consistent order
+    image_files = sorted(image_files)
 
-    df = read_table(meta_path)
-
-    # Normalize ID column
-    if "listing_id" not in df.columns:
-        if "anzeigen_id" in df.columns:
-            df = df.rename(columns={"anzeigen_id": "listing_id"})
-        else:
-            raise ValueError("Metadata must contain 'anzeigen_id' or 'listing_id'.")
-
-    # Normalize title/description
-    if "title" not in df.columns:
-        if "titel" in df.columns:
-            df = df.rename(columns={"titel": "title"})
-        else:
-            df["title"] = ""
-
-    if "description" not in df.columns:
-        if "beschreibung" in df.columns:
-            df = df.rename(columns={"beschreibung": "description"})
-        else:
-            df["description"] = ""
-
-    df["listing_id"] = df["listing_id"].astype(str)
-
-    return df
+    return [str(p.as_posix()) for p in image_files]
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input_dir", required=True, type=str)
-    parser.add_argument("--output", required=True, type=str)
-    args = parser.parse_args()
+    args = parse_args()
 
-    input_dir = Path(args.input_dir)
-    images_root = input_dir / "images"
+    listings = read_jsonl(args.listings)
 
-    meta = load_metadata(input_dir)
+    manifest_records: list[dict[str, Any]] = []
 
-    rows: List[Dict[str, Any]] = []
+    missing_folders = 0
+    empty_folders = 0
+    count_mismatch = 0
 
-    for _, row in tqdm(meta.iterrows(), total=len(meta), desc="Building manifest"):
-        listing_id = str(row["listing_id"])
+    for listing in listings:
+        listing_id = listing["listing_id"]
+        folder_name = listing["image_folder"]
 
-        title = row.get("title", "") or ""
-        description = row.get("description", "") or ""
-        text = normalize_text(title, description)
+        folder_path = args.images_root / folder_name
 
-        listing_img_dir = images_root / listing_id
-        imgs = list_images(listing_img_dir)
+        if not folder_path.exists():
+            missing_folders += 1
+            image_paths = []
+        else:
+            image_paths = get_image_paths(folder_path)
 
-        if len(imgs) == 0:
-            continue
+        if len(image_paths) == 0:
+            empty_folders += 1
 
-        rows.append(
-            {
-                "listing_id": listing_id,
-                "image_paths": [p.as_posix() for p in imgs],
-                "n_images": len(imgs),
-                "title": title,
-                "description": description,
-                "text": text,
+        # Compare with expected count from Excel
+        expected_count = listing.get("image_count")
+        if expected_count is not None and expected_count != len(image_paths):
+            count_mismatch += 1
+            print(f"[WARN] {listing_id}: excel={expected_count}, actual={len(image_paths)}")
 
-                # optional metadata
-                "city": row.get("stadt", None),
-                "rooms": row.get("zimmer", None),
-                "sqm": row.get("wohnfläche_m2", None),
-                "price": row.get("preis_brutto", None),
-                "property_type": row.get("immobilientyp", None),
-                "condition": row.get("zustand", None),
-            }
-        )
+        record = {
+            "listing_id": listing_id,
+            "image_folder": folder_name,
+            "image_paths": image_paths,
+            "num_images": len(image_paths),
+        }
 
-    manifest = pd.DataFrame(rows)
+        manifest_records.append(record)
 
-    if len(manifest) == 0:
-        raise RuntimeError("Manifest is empty. Check images folder and ID matching.")
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    write_jsonl(args.output, manifest_records)
 
-    write_parquet(manifest, args.output)
-
-    print(f"Wrote manifest: {args.output}")
-    print(f"Listings: {manifest['listing_id'].nunique()}")
-    print(f"Total images: {manifest['n_images'].sum()}")
+    print("=== Manifest Summary ===")
+    print(f"Total listings: {len(listings)}")
+    print(f"Missing folders: {missing_folders}")
+    print(f"Empty folders: {empty_folders}")
+    print(f"Count mismatches: {count_mismatch}")
+    print(f"[INFO] Manifest written to: {args.output}")
 
 
 if __name__ == "__main__":

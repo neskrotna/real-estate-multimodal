@@ -4,6 +4,8 @@
 data/raw/images/
 data/raw/listings/
 data/raw/annotation_tool/images/
+data/processed/images/
+tools/annotation_tool/images/
 
 # Annotation outputs (optional)
 data/annotation_tool/annotations/*.json
