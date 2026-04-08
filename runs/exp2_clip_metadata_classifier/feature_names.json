@@ -1,0 +1,15 @@
+[
+  "clip_max_similarity",
+  "clip_mean_similarity",
+  "clip_top2_mean_similarity",
+  "num_images_used",
+  "same_city",
+  "same_country",
+  "same_listing_type",
+  "same_property_type",
+  "same_condition",
+  "same_outdoor_space",
+  "rooms_abs_diff",
+  "area_abs_diff_log1p",
+  "price_abs_diff_log1p"
+]

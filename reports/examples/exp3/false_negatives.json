@@ -1,0 +1,91 @@
+[
+  {
+    "pair_type": "positive",
+    "label": 1,
+    "split": "test",
+    "text_listing_id": "VIE_A_018",
+    "image_listing_id": "VIE_A_018",
+    "text": "Diese moderne Wohnung befindet sich in einem Neubau in der Raffelsbergergasse und bietet rund 150 m² Wohnfläche. Die Fläche verteilt sich auf vier Zimmer und bietet dadurch viele Möglichkeiten zur Nutzung.\n\nDie Wohnung befindet sich in neuwertigem Zustand und wirkt insgesamt sehr modern. Große Fensterflächen sorgen für viel Tageslicht und ein angenehmes Wohnklima.\n\nDurch die großzügige Fläche eignet sich die Wohnung sowohl für Familien als auch für Personen die mehr Platz wünschen.\n\nDie Lage bietet eine gute Mischung aus Ruhe und guter Erreichbarkeit der Innenstadt.",
+    "image_paths": [
+      "data/processed/images/VIE_A_018/VIE_A_018_img_11.jpg",
+      "data/processed/images/VIE_A_018/VIE_A_018_img_12.jpg",
+      "data/processed/images/VIE_A_018/VIE_A_018_img_13.jpg",
+      "data/processed/images/VIE_A_018/VIE_A_018_img_14.jpg",
+      "data/processed/images/VIE_A_018/VIE_A_018_img_15.jpg",
+      "data/processed/images/VIE_A_018/VIE_A_018_img_16.jpg",
+      "data/processed/images/VIE_A_018/VIE_A_018_img_17.jpg",
+      "data/processed/images/VIE_A_018/VIE_A_018_img_18.jpg",
+      "data/processed/images/VIE_A_018/VIE_A_018_img_19.jpg",
+      "data/processed/images/VIE_A_018/VIE_A_018_img_20.jpg"
+    ],
+    "similarity": 0.4986012578010559,
+    "predicted_label": 0
+  },
+  {
+    "pair_type": "positive",
+    "label": 1,
+    "split": "test",
+    "text_listing_id": "VIE_A_029",
+    "image_listing_id": "VIE_A_029",
+    "text": "Verfügbar ab sofort provisionsfrei Miete: 975 € inkl. BK, nähe U1 Hauptbahnhof und U1 Keplerplatz 2-Zimmer Wohnung mit Balkon, Neubau mit Aufzug zu vermieten Nutzfläche 45,7 m2 (39,96 m2 Wohnfläche + Balkon 5,7 m2) inkl. Küche und Badezimmermöbel Deckenheizung, Wohnraumlüftung und Kühlung (im Sommer) Echtholzparkett Kellerabteil, Fahrradabstellraum Kaution: 3 Bruttomonatsmieten separat auch Parkplätze mit Ladeanschluss für e-Autos zur Vermietung",
+    "image_paths": [
+      "data/processed/images/VIE_A_029/VIE_A_029_img_01.jpg",
+      "data/processed/images/VIE_A_029/VIE_A_029_img_02.jpg",
+      "data/processed/images/VIE_A_029/VIE_A_029_img_03.jpg",
+      "data/processed/images/VIE_A_029/VIE_A_029_img_04.jpg",
+      "data/processed/images/VIE_A_029/VIE_A_029_img_05.jpg",
+      "data/processed/images/VIE_A_029/VIE_A_029_img_06.jpg"
+    ],
+    "similarity": 0.5443341732025146,
+    "predicted_label": 0
+  },
+  {
+    "pair_type": "positive",
+    "label": 1,
+    "split": "test",
+    "text_listing_id": "BA_SK_002",
+    "image_listing_id": "BA_SK_002",
+    "text": "WOHNUNG:\nDie Wohnung hat eine Fläche von 74 m² mit Balkon. Sie befindet sich im 5/6 Stock des Wohnhauses. Zur Wohnung gehört auch ein Keller im Untergeschoss des Gebäudes.\n\nAUFTEILUNG:\nEingangsflur, Küche ist verbunden mit dem Wohnbereich mit Ausgang auf den Balkon, Schlafzimmer, Badezimmer mit Badewanne, separates WC.\n\nAUSSTATTUNG:\nDie Wohnung ist komplett, modern und geschmackvoll eingerichtet, mit viel Stauraum. Die moderne Küche ist voll ausgestattet mit Geräten.\n\nLAGE:\nRuhige, sichere Umgebung, angenehme Nachbarn. Vorteil der Lage ist die Nähe zum Zentrum von Bratislava, in Gehweite befinden sich Haltestellen der öffentlichen Verkehrsmittel. In der Nähe gibt es sehr gute Infrastruktur, Lebensmittelgeschäfte, Apotheken, Kinderspielplätze, Schule und Kindergarten. Ein Parkplatz gehört zur Wohnung und ist Teil der Miete.\n\nPREIS:\nMonatliche Miete 850 € + 140 € Energie\nBei Vertragsunterzeichnung wird 1 Monatsmiete mit Energie, 1 Monatskaution und Provision für die Immobilienagentur bezahlt.\nDie Wohnung ist sofort verfügbar.",
+    "image_paths": [
+      "data/processed/images/BA_SK_002/BA_SK_002_img_01.jpg",
+      "data/processed/images/BA_SK_002/BA_SK_002_img_02.jpg",
+      "data/processed/images/BA_SK_002/BA_SK_002_img_03.jpg",
+      "data/processed/images/BA_SK_002/BA_SK_002_img_04.jpg",
+      "data/processed/images/BA_SK_002/BA_SK_002_img_05.jpg",
+      "data/processed/images/BA_SK_002/BA_SK_002_img_06.jpg",
+      "data/processed/images/BA_SK_002/BA_SK_002_img_07.jpg",
+      "data/processed/images/BA_SK_002/BA_SK_002_img_08.jpg",
+      "data/processed/images/BA_SK_002/BA_SK_002_img_09.jpg",
+      "data/processed/images/BA_SK_002/BA_SK_002_img_10.jpg",
+      "data/processed/images/BA_SK_002/BA_SK_002_img_11.jpg",
+      "data/processed/images/BA_SK_002/BA_SK_002_img_12.jpg",
+      "data/processed/images/BA_SK_002/BA_SK_002_img_13.jpg",
+      "data/processed/images/BA_SK_002/BA_SK_002_img_14.jpg",
+      "data/processed/images/BA_SK_002/BA_SK_002_img_15.jpg",
+      "data/processed/images/BA_SK_002/BA_SK_002_img_16.jpg"
+    ],
+    "similarity": 0.5551230311393738,
+    "predicted_label": 0
+  },
+  {
+    "pair_type": "positive",
+    "label": 1,
+    "split": "test",
+    "text_listing_id": "VIE_A_033",
+    "image_listing_id": "VIE_A_033",
+    "text": "Moderne Neubauwohnung mit 3 Zimmern und 75,26 m² Wohnfläche in der Scheugasse 17, 1100 Wien. Die barrierefreie Wohnung im ersten Stock ist ab dem 01.06.2026 verfügbar und kostet monatlich 1.375 €. Ein Aufzug erleichtert den Zugang zur Wohnung. Die Wohnung besticht durch ihre hochwertige Ausstattung mit Parkettböden und einer eingebauten Küche. Zur Annehmlichkeit trägt die Klimaanlage bei, die für angenehme Temperaturen sorgt. Das Badezimmer verfügt über eine Badewanne. Zusätzlichen Stauraum bietet ein Kellerabteil. Die rollstuhlgerechte Gestaltung ermöglicht einen barrierefreien Wohnkomfort für alle Bewohner:innen.",
+    "image_paths": [
+      "data/processed/images/VIE_A_033/VIE_A_033_img_01.jpg",
+      "data/processed/images/VIE_A_033/VIE_A_033_img_02.jpg",
+      "data/processed/images/VIE_A_033/VIE_A_033_img_03.jpg",
+      "data/processed/images/VIE_A_033/VIE_A_033_img_04.jpg",
+      "data/processed/images/VIE_A_033/VIE_A_033_img_05.jpg",
+      "data/processed/images/VIE_A_033/VIE_A_033_img_06.jpg",
+      "data/processed/images/VIE_A_033/VIE_A_033_img_07.jpg",
+      "data/processed/images/VIE_A_033/VIE_A_033_img_08.jpg",
+      "data/processed/images/VIE_A_033/VIE_A_033_img_09.jpg"
+    ],
+    "similarity": 0.566506028175354,
+    "predicted_label": 0
+  }
+]

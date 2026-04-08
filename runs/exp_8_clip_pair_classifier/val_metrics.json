@@ -1,0 +1,12 @@
+{
+  "num_pairs": 56,
+  "threshold": 0.01,
+  "accuracy": 0.25,
+  "precision": 0.25,
+  "recall": 1.0,
+  "f1": 0.4,
+  "tp": 14,
+  "fp": 42,
+  "tn": 0,
+  "fn": 0
+}

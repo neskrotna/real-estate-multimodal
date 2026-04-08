@@ -1,0 +1,119 @@
+[
+  {
+    "pair_type": "random_negative",
+    "label": 0,
+    "split": "test",
+    "text_listing_id": "BA_SK_037",
+    "image_listing_id": "VIE_A_006",
+    "text": "Zum Verkauf: moderne 2-Zimmer-Wohnung in attraktiver Lage – Petrzalka\n\nWir bieten eine angenehme 2-Zimmer-Wohnung mit einer Fläche von 40 m² zum Verkauf an. Die Wohnung befindet sich im 1. Stock eines ca. 10 Jahre alten Neubaus in der Udernicka Straße in Bratislava.\n\nDie Lage gehört zu den gefragten Wohngegenden mit sehr guter Anbindung an das Stadtzentrum.\n\nLagevorteile\nNähe zum Bahnhof Petrzalka\nschnelle Verbindung ins Stadtzentrum\nEinkaufs- und Freizeitzentrum Aupark in ca. 20 Minuten zu Fuß erreichbar\nWohnung und Ausstattung\n\nDie Wohnung ist praktisch geschnitten und eignet sich sowohl:\n\nzur Eigennutzung\nals Investition zur Vermietung\n\nZur Wohnung gehören:\n\nzwei Abstellräume direkt auf derselben Etage\nParkplatz in einem abgeschlossenen Areal (+20.000 €), bietet Komfort und Sicherheit\nGebäude\n\nDas Wohnhaus ist:\n\nmodern\ngepflegt\nin ruhiger Umgebung gelegen\nmit vollständiger Infrastruktur in der Nähe\n\n\nFür weitere Informationen oder zur Vereinbarung eines Besichtigungstermins stehen wir gerne zur Verfügung.",
+    "image_paths": [
+      "data/processed/images/VIE_A_006/VIE_A_006_img_26.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_27.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_28.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_29.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_30.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_31.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_32.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_33.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_34.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_35.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_36.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_37.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_38.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_39.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_40.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_41.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_42.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_43.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_44.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_45.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_46.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_47.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_48.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_49.jpg",
+      "data/processed/images/VIE_A_006/VIE_A_006_img_50.jpg"
+    ],
+    "similarity": 0.12704142928123474,
+    "predicted_label": 0
+  },
+  {
+    "pair_type": "random_negative",
+    "label": 0,
+    "split": "test",
+    "text_listing_id": "BA_SK_037",
+    "image_listing_id": "VIE_A_032",
+    "text": "Zum Verkauf: moderne 2-Zimmer-Wohnung in attraktiver Lage – Petrzalka\n\nWir bieten eine angenehme 2-Zimmer-Wohnung mit einer Fläche von 40 m² zum Verkauf an. Die Wohnung befindet sich im 1. Stock eines ca. 10 Jahre alten Neubaus in der Udernicka Straße in Bratislava.\n\nDie Lage gehört zu den gefragten Wohngegenden mit sehr guter Anbindung an das Stadtzentrum.\n\nLagevorteile\nNähe zum Bahnhof Petrzalka\nschnelle Verbindung ins Stadtzentrum\nEinkaufs- und Freizeitzentrum Aupark in ca. 20 Minuten zu Fuß erreichbar\nWohnung und Ausstattung\n\nDie Wohnung ist praktisch geschnitten und eignet sich sowohl:\n\nzur Eigennutzung\nals Investition zur Vermietung\n\nZur Wohnung gehören:\n\nzwei Abstellräume direkt auf derselben Etage\nParkplatz in einem abgeschlossenen Areal (+20.000 €), bietet Komfort und Sicherheit\nGebäude\n\nDas Wohnhaus ist:\n\nmodern\ngepflegt\nin ruhiger Umgebung gelegen\nmit vollständiger Infrastruktur in der Nähe\n\n\nFür weitere Informationen oder zur Vereinbarung eines Besichtigungstermins stehen wir gerne zur Verfügung.",
+    "image_paths": [
+      "data/processed/images/VIE_A_032/VIE_A_032_img_01.jpg",
+      "data/processed/images/VIE_A_032/VIE_A_032_img_02.jpg",
+      "data/processed/images/VIE_A_032/VIE_A_032_img_03.jpg",
+      "data/processed/images/VIE_A_032/VIE_A_032_img_04.jpg",
+      "data/processed/images/VIE_A_032/VIE_A_032_img_05.jpg",
+      "data/processed/images/VIE_A_032/VIE_A_032_img_06.jpg",
+      "data/processed/images/VIE_A_032/VIE_A_032_img_07.jpg"
+    ],
+    "similarity": 0.23736193776130676,
+    "predicted_label": 0
+  },
+  {
+    "pair_type": "random_negative",
+    "label": 0,
+    "split": "test",
+    "text_listing_id": "VIE_A_004",
+    "image_listing_id": "BA_SK_036",
+    "text": "Kleine, aber feine 1-Zimmer-Wohnung in der Mariengasse im 17. Bezirk. Auf rund 35 m² erwartet Sie ein kompakter Wohn- und Schlafbereich mit separater Sanitäreinheit. Ideal für Personen die eine unkomplizierte Mietwohnung suchen. Die Wohnung ist saniert und sofort verfügbar.",
+    "image_paths": [
+      "data/processed/images/BA_SK_036/BA_SK_036_img_01.jpg",
+      "data/processed/images/BA_SK_036/BA_SK_036_img_02.jpg",
+      "data/processed/images/BA_SK_036/BA_SK_036_img_03.jpg",
+      "data/processed/images/BA_SK_036/BA_SK_036_img_04.jpg",
+      "data/processed/images/BA_SK_036/BA_SK_036_img_05.jpg",
+      "data/processed/images/BA_SK_036/BA_SK_036_img_06.jpg",
+      "data/processed/images/BA_SK_036/BA_SK_036_img_07.jpg",
+      "data/processed/images/BA_SK_036/BA_SK_036_img_08.jpg",
+      "data/processed/images/BA_SK_036/BA_SK_036_img_09.jpg"
+    ],
+    "similarity": 0.2836475968360901,
+    "predicted_label": 0
+  },
+  {
+    "pair_type": "random_negative",
+    "label": 0,
+    "split": "test",
+    "text_listing_id": "BA_SK_036",
+    "image_listing_id": "VIE_A_033",
+    "text": "Guten Tag,\n\nich vermiete eine helle 2-Zimmer-Wohnung mit schönem Blick auf die Stadt in Bratislava – Ruzinov. Zur Wohnung gehört ein zugewiesener Parkplatz direkt vor dem Gebäude, ein Kellerabteil im Untergeschoss sowie ein zusätzlicher Stauraum (Mezzanin) innerhalb der Wohnung.\n\nDie Wohnfläche beträgt 48 m² + 7 m² Balkon + 6 m² gemauerter Keller.\n\nAusstattung\n\nDie Wohnung ist vollständig möbliert.\n\nWohnzimmer: Sofa, TV-Möbel, Fernseher\nSchlafzimmer: Doppelbett, Matratzen, Kleiderschrank\nEingangsbereich: Garderobe\n\nDie Küche ist ausgestattet mit:\n\nGeschirrspüler\nKühlschrank und Gefrierfach\nKochfeld\nkombinierter Mikrowelle und Backofen\n\nIm Badezimmer befindet sich eine Waschmaschine.\n\nDie Wohnung verfügt außerdem über eine Klimaanlage (Wind-Free-Technologie), die auch fernsteuerbar ist.\n\nBesonderheit\n\nEin zusätzlicher Mezzanin-Bereich dient als Stauraum oder kann auch als Arbeitsbereich genutzt werden. Er ist über eine Treppe vom Eingangsbereich aus erreichbar. Dadurch wirkt die Wohnung offen und bietet hohe Decken.\n\nLage\n\nDie Wohnung befindet sich in Ružinov, in fußläufiger Nähe zu:\n\nStrkovecke jazero\nMarkt Mileticova\nsehr gute Anbindung an öffentliche Verkehrsmittel\n\nDirekt:\n\nRadweg entlang des Gebäudes\nLIDL direkt nebenan\nWohn- und Geschäftsbereich Rozadol (1 Minute zu Fuß) mit Restaurants, Cafés und Dienstleistungen\nPreis\nMiete: 560 € / Monat\nNebenkosten inkl. TV und Internet: 290 € / Monat\nParkplatz: 50 € / Monat\n\nGesamt: 900 € / Monat\n\nDie Wohnung wird zusammen mit dem Stellplatz vermietet (geeignet für Auto oder Motorrad).\n\nSonstiges\n\nGeeignet für:\n\nEinzelperson oder arbeitendes Paar\nmaximal 2 Erwachsene\n\nBedingungen:\n\nNichtraucher\nkeine Haustiere\n\nBesichtigungen sind jederzeit nach Vereinbarung möglich.",
+    "image_paths": [
+      "data/processed/images/VIE_A_033/VIE_A_033_img_01.jpg",
+      "data/processed/images/VIE_A_033/VIE_A_033_img_02.jpg",
+      "data/processed/images/VIE_A_033/VIE_A_033_img_03.jpg",
+      "data/processed/images/VIE_A_033/VIE_A_033_img_04.jpg",
+      "data/processed/images/VIE_A_033/VIE_A_033_img_05.jpg",
+      "data/processed/images/VIE_A_033/VIE_A_033_img_06.jpg",
+      "data/processed/images/VIE_A_033/VIE_A_033_img_07.jpg",
+      "data/processed/images/VIE_A_033/VIE_A_033_img_08.jpg",
+      "data/processed/images/VIE_A_033/VIE_A_033_img_09.jpg"
+    ],
+    "similarity": 0.39806628227233887,
+    "predicted_label": 0
+  },
+  {
+    "pair_type": "random_negative",
+    "label": 0,
+    "split": "test",
+    "text_listing_id": "VIE_A_029",
+    "image_listing_id": "VIE_A_004",
+    "text": "Verfügbar ab sofort provisionsfrei Miete: 975 € inkl. BK, nähe U1 Hauptbahnhof und U1 Keplerplatz 2-Zimmer Wohnung mit Balkon, Neubau mit Aufzug zu vermieten Nutzfläche 45,7 m2 (39,96 m2 Wohnfläche + Balkon 5,7 m2) inkl. Küche und Badezimmermöbel Deckenheizung, Wohnraumlüftung und Kühlung (im Sommer) Echtholzparkett Kellerabteil, Fahrradabstellraum Kaution: 3 Bruttomonatsmieten separat auch Parkplätze mit Ladeanschluss für e-Autos zur Vermietung",
+    "image_paths": [
+      "data/processed/images/VIE_A_004/VIE_A_004_img_01.JPG",
+      "data/processed/images/VIE_A_004/VIE_A_004_img_02.JPG",
+      "data/processed/images/VIE_A_004/VIE_A_004_img_03.JPG",
+      "data/processed/images/VIE_A_004/VIE_A_004_img_04.JPG",
+      "data/processed/images/VIE_A_004/VIE_A_004_img_05.JPG",
+      "data/processed/images/VIE_A_004/VIE_A_004_img_06.JPG",
+      "data/processed/images/VIE_A_004/VIE_A_004_img_07.jpg"
+    ],
+    "similarity": 0.41753992438316345,
+    "predicted_label": 0
+  }
+]

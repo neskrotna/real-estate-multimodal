@@ -6,12 +6,14 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 from src.utils.io import read_json
+from src.visualizations.style import apply_plot_style, finish_plot, PRIMARY_COLOR, SECONDARY_COLOR
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Plot training history for fine-tuning experiment.")
-    parser.add_argument("--history", type=Path, default=Path("runs/exp3_clip_projection_finetune/history.json"))
-    parser.add_argument("--output", type=Path, default=Path("reports/figures/exp3_training_curve.png"))
+    parser = argparse.ArgumentParser(description="Plot training history for a fine-tuning experiment.")
+    parser.add_argument("--history", type=Path, required=True)
+    parser.add_argument("--title", type=str, default="Fine-tuning loss curves")
+    parser.add_argument("--output", type=Path, required=True)
     return parser.parse_args()
 
 
@@ -23,21 +25,19 @@ def main() -> None:
     train_loss = [row["train_loss"] for row in history]
     val_loss = [row["val_loss"] for row in history]
 
-    plt.figure(figsize=(8, 5))
-    plt.plot(epochs, train_loss, label="Train loss")
-    plt.plot(epochs, val_loss, label="Val loss")
+    apply_plot_style()
+    plt.figure(figsize=(8.5, 5.5))
+
+    plt.plot(epochs, train_loss, label="Train loss", color=PRIMARY_COLOR, linewidth=2.5, marker="o", markersize=4)
+    plt.plot(epochs, val_loss, label="Val loss", color=SECONDARY_COLOR, linewidth=2.5, marker="o", markersize=4)
+
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
-    plt.title("Fine-tuning loss curves")
-    plt.legend()
+    plt.title(args.title)
+    plt.legend(frameon=True)
 
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    plt.tight_layout()
-    plt.savefig(args.output, dpi=200)
-    plt.close()
-
+    finish_plot(args.output)
     print(f"[INFO] Saved figure to {args.output}")
-
 
 if __name__ == "__main__":
     main()

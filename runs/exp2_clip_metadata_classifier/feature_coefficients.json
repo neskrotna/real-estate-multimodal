@@ -1,0 +1,15 @@
+{
+  "clip_max_similarity": -0.260218353288122,
+  "clip_mean_similarity": 0.14708382890502028,
+  "clip_top2_mean_similarity": -0.008008460017294952,
+  "num_images_used": 0.0,
+  "same_city": 0.46439174460356547,
+  "same_country": 0.1565180768468247,
+  "same_listing_type": -0.0011226794878628158,
+  "same_property_type": 0.05117059184739385,
+  "same_condition": 0.42553236544566075,
+  "same_outdoor_space": 0.8089288894792067,
+  "rooms_abs_diff": -0.46752202549740784,
+  "area_abs_diff_log1p": -2.5284783352934226,
+  "price_abs_diff_log1p": -2.7242335022738904
+}

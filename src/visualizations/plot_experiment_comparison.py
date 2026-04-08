@@ -4,15 +4,26 @@ import argparse
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
 
 from src.utils.io import read_json
+from src.visualizations.style import apply_plot_style, finish_plot, SERIES_COLORS
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Plot side-by-side experiment metric comparison.")
-    parser.add_argument("--exp1-metrics", type=Path, default=Path("runs/exp1_clip_maxpool/test_metrics.json"))
-    parser.add_argument("--exp2-metrics", type=Path, default=Path("runs/exp2_clip_metadata_classifier/test_metrics.json"))
-    parser.add_argument("--exp3-metrics", type=Path, default=Path("runs/exp3_clip_projection_finetune/test_metrics.json"))
+    parser.add_argument(
+        "--metrics-files",
+        nargs="+",
+        required=True,
+        help="List of metric JSON files",
+    )
+    parser.add_argument(
+        "--labels",
+        nargs="+",
+        required=True,
+        help="List of labels matching the metric files",
+    )
     parser.add_argument("--output", type=Path, default=Path("reports/figures/experiment_comparison.png"))
     return parser.parse_args()
 
@@ -20,39 +31,45 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    exp1 = read_json(args.exp1_metrics)
-    exp3 = read_json(args.exp3_metrics)
-    exp4 = read_json(args.exp4_metrics)
+    if len(args.metrics_files) != len(args.labels):
+        raise ValueError("--metrics-files and --labels must have the same length")
 
-    labels = ["Exp1 MaxPool", "Exp2 MetaClassifier", "Exp3 FineTune"]
-    metrics = ["accuracy", "precision", "recall", "f1"]
-    values = [
-        [exp1[m] for m in metrics],
-        [exp3[m] for m in metrics],
-        [exp4[m] for m in metrics],
-    ]
+    apply_plot_style()
 
-    x = range(len(metrics))
-    width = 0.25
+    metric_names = ["accuracy", "precision", "recall", "f1"]
+    pretty_names = ["Accuracy", "Precision", "Recall", "F1 Score"]
+    all_metrics = [read_json(Path(p)) for p in args.metrics_files]
 
-    plt.figure(figsize=(10, 6))
-    plt.bar([i - width for i in x], values[0], width=width, label=labels[0])
-    plt.bar(list(x), values[1], width=width, label=labels[1])
-    plt.bar([i + width for i in x], values[2], width=width, label=labels[2])
+    x = np.arange(len(metric_names))
+    n = len(all_metrics)
+    width = 0.8 / n
 
-    plt.xticks(list(x), metrics)
-    plt.ylim(0, 1)
+    plt.figure(figsize=(12, 6))
+
+    for i, (label, metrics) in enumerate(zip(args.labels, all_metrics)):
+        values = [metrics[m] for m in metric_names]
+        offset = (i - (n - 1) / 2) * width
+        color = SERIES_COLORS[i % len(SERIES_COLORS)]
+        bars = plt.bar(x + offset, values, width=width, label=label, color=color, edgecolor="white", linewidth=1.0)
+
+        for bar, value in zip(bars, values):
+            plt.text(
+                bar.get_x() + bar.get_width() / 2,
+                value + 0.015,
+                f"{value:.2f}",
+                ha="center",
+                va="bottom",
+                fontsize=9,
+            )
+
+    plt.xticks(x, pretty_names)
+    plt.ylim(0, 1.08)
     plt.ylabel("Score")
-    plt.title("Experiment comparison on test set")
-    plt.legend()
+    plt.title("Experiment Comparison on Test Set")
+    plt.legend(frameon=True)
 
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    plt.tight_layout()
-    plt.savefig(args.output, dpi=200)
-    plt.close()
-
+    finish_plot(args.output)
     print(f"[INFO] Saved figure to {args.output}")
-
 
 if __name__ == "__main__":
     main()

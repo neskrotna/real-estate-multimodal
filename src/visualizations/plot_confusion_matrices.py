@@ -6,14 +6,24 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 from src.utils.io import read_json
+from src.visualizations.style import apply_plot_style, finish_plot, TEXT_COLOR
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Plot confusion matrices for experiments.")
-    parser.add_argument("--exp1-metrics", type=Path, default=Path("runs/exp1_clip_maxpool/test_metrics.json"))
-    parser.add_argument("--exp2-metrics", type=Path, default=Path("runs/exp2_clip_metadata_classifier/test_metrics.json"))
-    parser.add_argument("--exp3-metrics", type=Path, default=Path("runs/exp3_clip_projection_finetune/test_metrics.json"))
-    parser.add_argument("--output-dir", type=Path, default=Path("reports/figures"))
+    parser = argparse.ArgumentParser(description="Plot confusion matrices for multiple experiments.")
+    parser.add_argument(
+        "--metrics-files",
+        nargs="+",
+        required=True,
+        help="List of metric JSON files",
+    )
+    parser.add_argument(
+        "--labels",
+        nargs="+",
+        required=True,
+        help="List of labels matching the metric files",
+    )
+    parser.add_argument("--output-dir", type=Path, default=Path("reports/figures/confusion_matrices"))
     return parser.parse_args()
 
 
@@ -23,32 +33,40 @@ def save_confusion_matrix(metrics_path: Path, output_path: Path, title: str) -> 
 
     matrix = [[tn, fp], [fn, tp]]
 
-    plt.figure(figsize=(5, 4))
-    plt.imshow(matrix)
+    apply_plot_style()
+    plt.figure(figsize=(5.5, 4.5))
+    im = plt.imshow(matrix, cmap="RdPu")
+
     plt.xticks([0, 1], ["Pred 0", "Pred 1"])
     plt.yticks([0, 1], ["True 0", "True 1"])
     plt.title(title)
 
+    max_value = max(max(row) for row in matrix)
     for i in range(2):
         for j in range(2):
-            plt.text(j, i, str(matrix[i][j]), ha="center", va="center")
+            value = matrix[i][j]
+            text_color = "white" if value > max_value / 2 else TEXT_COLOR
+            plt.text(j, i, str(value), ha="center", va="center", fontsize=12, fontweight="bold", color=text_color)
 
-    plt.colorbar()
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=200)
-    plt.close()
+    plt.colorbar(im, fraction=0.046, pad=0.04)
+    finish_plot(output_path)
 
 
 def main() -> None:
     args = parse_args()
+
+    if len(args.metrics_files) != len(args.labels):
+        raise ValueError("--metrics-files and --labels must have the same length")
+
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    save_confusion_matrix(args.exp1_metrics, args.output_dir / "exp1_confusion_matrix.png", "Exp1 MaxPool")
-    save_confusion_matrix(args.exp2_metrics, args.output_dir / "exp2_confusion_matrix.png", "Exp2 MetaClassifier")
-    save_confusion_matrix(args.exp3_metrics, args.output_dir / "exp3_confusion_matrix.png", "Exp3 FineTune")
+    for metrics_file, label in zip(args.metrics_files, args.labels):
+        metrics_path = Path(metrics_file)
+        safe_name = label.lower().replace(" ", "_").replace("/", "_")
+        output_path = args.output_dir / f"{safe_name}_confusion_matrix.png"
+        save_confusion_matrix(metrics_path, output_path, label)
 
     print(f"[INFO] Saved confusion matrices to {args.output_dir}")
-
 
 if __name__ == "__main__":
     main()
