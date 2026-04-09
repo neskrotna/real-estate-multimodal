@@ -1,0 +1,13 @@
+model_key,model,type,recall@1,recall@5,recall@10,mrr,accuracy,precision,recall_cls,f1,auc,metrics_file
+text_tfidf_title_to_description,TF-IDF,text,0.3125,0.75,0.875,0.4762362637362637,,,,,,runs\text_tfidf_title_to_description\metrics.json
+text_sbert_title_to_description,SBERT,text,0.375,0.75,0.9375,0.5706845238095238,,,,,,runs\text_sbert_title_to_description\metrics.json
+image_resnet_half_to_half,ResNet,image,0.5454545454545454,0.7272727272727273,1.0,0.6422799422799422,,,,,,runs\image_resnet_half_to_half\metrics.json
+clip_baseline,CLIP baseline,multimodal,,,,,0.640625,0.3157894736842105,0.375,0.34285714285714286,,runs\clip_baseline\test_metrics.json
+exp1_clip_maxpool,Exp1: CLIP maxpool,multimodal,,,,,0.328125,0.24528301886792453,0.8125,0.37681159420289856,,runs\exp1_clip_maxpool\test_metrics.json
+exp2_clip_metadata_classifier,Exp2: metadata classifier,multimodal,,,,,1.0,1.0,1.0,1.0,,runs\exp2_clip_metadata_classifier\test_metrics.json
+exp3_clip_projection_finetune,Exp3: projection fine-tuning,multimodal,,,,,0.53125,0.3157894736842105,0.75,0.44444444444444436,,runs\exp3_clip_projection_finetune\test_metrics.json
+exp4_clip_only_classifier,Exp4: CLIP-only classifier,multimodal,,,,,0.25,0.25,1.0,0.4,,runs\exp4_clip_only_classifier\test_metrics.json
+exp5_clip_projection_maxpool,Exp5: projection + maxpool,multimodal,,,,,0.546875,0.30303030303030304,0.625,0.40816326530612246,,runs\exp5_clip_projection_maxpool\test_metrics.json
+exp6_clip_projection_weighted_pooling,Exp6: projection + weighted pooling,multimodal,,,,,0.453125,0.2682926829268293,0.6875,0.38596491228070173,,runs\exp6_clip_projection_weighted_pooling\test_metrics.json
+exp7_clip_hard_negative_finetune,Exp7: hard negative fine-tuning,multimodal,,,,,0.296875,0.2542372881355932,0.9375,0.39999999999999997,,runs\exp7_clip_hard_negative_finetune\test_metrics.json
+exp8_clip_pair_classifier,Exp8: pair classifier,multimodal,,,,,0.25,0.25,1.0,0.4,,runs\exp8_clip_pair_classifier\test_metrics.json
