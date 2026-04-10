@@ -12,6 +12,7 @@ The pipeline includes:
   - Baseline and multimodal experiments
   - Retrieval-based evaluation (Recall@K, MRR)
   - Visualization and qualitative analysis
+  - Interactive demo for search and recommendation
 
 ## Models & Baselines
 
