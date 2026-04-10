@@ -199,11 +199,28 @@ python -m src.visualizations.export_qualitative_examples \
   --output-dir reports/examples/exp1
 ```
 
-## 5) Project structure
+## 5) Demo (Search & Recommendation)
+
+The project includes a lightweight web demo for interactive search and recommendation using all valuable trained models.
+
+What it does:
+
+  - Search listings using text queries
+  - Retrieve top-k similar listings
+  - Click a listing to get recommendations
+  - Switch between models (TF-IDF, SBERT, ResNet, CLIP, CLIP-Exp3-Projection-Head Fine-Tuning)
+
+## 6) Project structure
 ```bash
 data/
   raw/
   processed/
+
+demo/
+  artifacts/
+  backend/
+  frontend/
+  scripts
 
 reports/
 runs/
