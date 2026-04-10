@@ -29,3 +29,12 @@ venv/
 Thumbs.db
 .vscode/
 .idea/
+
+# -------------------
+# NODE
+# -------------------
+node_modules/
+npm-debug.log
+dist/
+build/
+.env
