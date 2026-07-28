@@ -211,6 +211,76 @@ What it does:
   - Click a listing to get recommendations
   - Switch between models (TF-IDF, SBERT, ResNet, CLIP, CLIP-Exp3-Projection-Head Fine-Tuning)
 
+### Running the Demo Application
+
+The demo application consists of two components:
+
+- **Frontend:** React + Vite
+- **Backend:** Node.js + Express
+
+Both services must be running simultaneously.
+
+#### 1. Start the Backend
+
+Open a terminal and navigate to the backend directory:
+
+```bash
+cd demo/backend
+```
+
+Install the required dependencies (only required the first time):
+
+```bash
+npm install
+```
+
+Start the backend server:
+
+```bash
+npm start
+```
+
+The backend will start on:
+
+```
+http://localhost:3001
+```
+
+---
+
+#### 2. Start the Frontend
+
+Open a second terminal and navigate to the frontend directory:
+
+```bash
+cd demo/frontend
+```
+
+Install the required dependencies (only required the first time):
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+The frontend will typically be available at:
+
+```
+http://localhost:5173
+```
+
+#### Notes
+
+- Text search is available for **TF-IDF**, **SBERT**, **CLIP**, and **Experiment 3**.
+- **ResNet-50** supports image-based search only.
+- The backend serves property images directly from the dataset.
+- All embeddings are precomputed to enable real-time retrieval during the demonstration.
+
 ## 6) Project structure
 ```bash
 data/
